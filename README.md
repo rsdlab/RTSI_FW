@@ -19,7 +19,7 @@
 * [seed_hri](https://github.com/rsdlab/seed_hri)
   SEED_NoidのHRI機能を有するパッケージ
 * [airec_hri](https://github.com/rsdlab/airec_hri)
-  AIRECのHRI機能を有するパッケージ
+  Dry-AIREC3のHRI機能を有するパッケージ
 
 # ドキュメント
 **マニュアル**
