@@ -18,7 +18,7 @@
   Service Applicationを有するパッケージ
 * [seed_hri](https://github.com/rsdlab/seed_hri)
   SEED_NoidのHRI機能を有するパッケージ
-* [seed_hri](https://github.com/rsdlab/airec_hri)
+* [airec_hri](https://github.com/rsdlab/airec_hri)
   AIRECのHRI機能を有するパッケージ
 
 # ドキュメント
