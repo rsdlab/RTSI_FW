@@ -1,0 +1,36 @@
+collect:
+  engine:
+  - seed_hri
+  rtm:
+  - health_judge
+  apt:
+  - null
+  aptros:
+  - null
+  pip:
+  - null
+  git:
+  - url: https://github.com/seed-solutions/seed_r7_ros_pkg
+    repo: seed_r7_ros_pkg
+    branch: null
+  - url: https://github.com/seed-solutions/seed_smartactuator_sdk
+    repo: seed_smartactuator_sdk
+    branch: null
+
+run:
+  roslaunch: 
+  - seed_r7_bringup moveit.launch
+  rosrun:
+  - seed_r7_samples seed_action.py
+  - sensor_system Detection.py
+  - sensor_system audios.py
+  - sensor_system camerapublish.py
+  
+Param:
+  Move:
+    vel: /cmd_vel 
+    odom: /odom
+    Kp: 0.4
+    Ki: 0.1
+  Person_Identification:
+    image: /camera/image_raw

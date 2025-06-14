@@ -1,0 +1,36 @@
+collect:
+  rtm:
+  - health_judge
+  engine:
+  - airec_hri
+  apt:
+  - null
+  aptros:
+  - null
+  pip:
+  - null
+  git:
+  - url: null
+    repo: null
+    branch: null
+
+run:
+  roslaunch: 
+  - torobo_bringup bringup_fake.launch 
+  rosrun:
+  - rois_ros camerapublish.py
+  - torobo_action_test torobo_act.py
+  - sensor_system Detection.py
+  - sensor_system audios.py
+  - sensor_system camerapublish.py
+  rtm: 
+  - health_judge
+
+Param:
+  Move:
+    vel: /torobo/base_controller/cmd_vel 
+    odom: /torobo/base_controller/odom
+    Kp: 0.5
+    Ki: 0.1
+  Person_Identification:
+    image: /torobo/head/see3cam_left/camera/color/image_raw

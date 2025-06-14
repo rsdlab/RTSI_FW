@@ -1,0 +1,43 @@
+scenario:
+  - task: Person_Detection
+    act:  ユーザが入室したことを検出する
+    arg:  ユーザ
+  - task: Speech_Synthesis
+    act:  あいさつする
+    arg:  hello
+  - task: Speech_Recognition
+    act:  ユーザの返答を認識する
+    arg:  返答
+  - task: Person_Identification
+    act:  ユーザと認識する
+    arg:  ユーザ
+  - task: Person_Localization
+    act:  ユーザの位置を認識する
+    arg:  ユーザの位置
+  - task: Move
+    act:  ユーザの近くまで移動する
+    arg:  [[200,0],[0,0]]
+  - task: Speech_Synthesis
+    act:  バイタルデータ計測を行うことを伝える
+    arg:  measure1
+  - task: Speech_Recognition
+    act:  ユーザの返答を認識する
+    arg: 返答
+  - task: Speech_Synthesis
+    act:  握手を依頼することを伝える
+    arg:  yorosiku
+  - task: Approach
+    act:  左腕をユーザの近くまで動かす
+    arg:  approach1
+  - task: Speech_Synthesis
+    act:  その状態で待機してほしいを伝える
+    arg:  check
+  - task: Touch
+    act:  右腕をユーザの近くまで動かして触れる
+    arg:  右腕
+  - task: Speech_Synthesis
+    act:  計測が終わったことを伝える
+    arg:  thank
+  - task: Leave
+    act:  腕を戻す
+    arg:  両腕
