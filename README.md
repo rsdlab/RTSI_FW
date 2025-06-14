@@ -17,9 +17,9 @@
 * [rois_env](https://github.com/rsdlab/rois_env)
   Service Applicationを有するパッケージ
 * [seed_hri](https://github.com/rsdlab/seed_hri)
-  SEED_NoidのHRI機能を有するパッケージ
+  THK(社)のSEED_NoidのHRI機能を有するパッケージ
 * [airec_hri](https://github.com/rsdlab/airec_hri)
-  Dry-AIREC3のHRI機能を有するパッケージ
+  Tokyo Robotics(社)のDry-AIREC3のHRI機能を有するパッケージ
 
 # ドキュメント
 **マニュアル**
