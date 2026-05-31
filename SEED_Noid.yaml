@@ -17,14 +17,50 @@ collect:
     repo: seed_smartactuator_sdk
     branch: null
 
+setup:
+  - name: bringup
+    package: seed_r7_ros_pkg
+    actions:
+      - controller: pc2
+      - cmd: 
+      - system: seed_r7_ros_pkg moveit2
+      - module: 
+    checks:
+      - controller: pc1 
+      - cmd: python3 setup/data_monitor.py
+        arg: 30,/move_group/status,any
+
 run:
-  roslaunch: 
-  - seed_r7_bringup moveit.launch
-  rosrun:
-  - seed_r7_samples seed_action.py
-  - sensor_system Detection.py
-  - sensor_system audios.py
-  - sensor_system camerapublish.py
+  pc1:
+    system:
+    
+    module:
+      
+  pc2:
+    system:
+      - Audios audio2
+      - realsense-ros rs_camera
+    module:
+      - seed_r7_ros_pkg seed_action0630
+  pc3:
+    system:
+      
+    module:
+
+  
+network:
+- id: pc1
+  host: "YOUR_IP_HERE"
+  user: "YOUR_USERNAME_HERE"
+  pswd: "YOUR_PASSWORD_HERE"
+- id: pc2
+  host: "YOUR_IP_HERE"
+  user: "YOUR_USERNAME_HERE"
+  pswd: "YOUR_PASSWORD_HERE"
+- id: pc3
+  host: "YOUR_IP_HERE"
+  user: "YOUR_USERNAME_HERE"
+  pswd: "YOUR_PASSWORD_HERE"
   
 Param:
   Move:

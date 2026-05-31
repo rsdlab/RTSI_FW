@@ -14,17 +14,70 @@ collect:
     repo: null
     branch: null
 
+
+setup:
+  - name: bringup
+    package: torobo_bringup
+    actions:
+      - controller: pc2 
+      - cmd: 
+      - system: torobo_bringup bringup_real
+      - module: 
+    checks:
+      - controller: pc1 
+      - cmd: python3 setup/data_monitor.py
+        arg: 60,/torobo/move_group/status,any
+  - name: servo_on
+    package: torobo_ros
+    actions:
+      - controller: pc2
+      - cmd: 
+      - system: 
+      - module: torobo_ros auto_setup
+    checks:
+      - controller: 
+      - cmd: python3 setup/data_monitor.py
+        arg: 30,/torobo/torobo_states/servo_state,check,[1, 1, 255, 255, 255, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1]
+
 run:
-  roslaunch: 
-  - torobo_bringup bringup_fake.launch 
-  rosrun:
-  - rois_ros camerapublish.py
-  - torobo_action_test torobo_act.py
-  - sensor_system Detection.py
-  - sensor_system audios.py
-  - sensor_system camerapublish.py
-  rtm: 
-  - health_judge
+  pc1:
+    system:
+    
+    module:
+
+  pc2:
+    system:
+  
+    module:
+      - torobo_action_test torobo_act_meijo
+  pc3:
+    system:
+      - Audios audio2
+      - torobo_cameras orbbec_image_publisher
+    module:
+  pc4:
+    system:
+      # - human_protection _human_protection2
+    module:
+
+
+network:
+- id: pc1
+  host: "YOUR_IP_HERE"
+  user: "YOUR_USERNAME_HERE"
+  pswd: "YOUR_PASSWORD_HERE"
+- id: pc2
+  host: "YOUR_IP_HERE"
+  user: "YOUR_USERNAME_HERE"
+  pswd: "YOUR_PASSWORD_HERE"
+- id: pc3
+  host: "YOUR_IP_HERE"
+  user: "YOUR_USERNAME_HERE"
+  pswd: "YOUR_PASSWORD_HERE"
+# - id: pc4
+#   host: "YOUR_IP_HERE"
+#   user: "YOUR_USERNAME_HERE"
+#   pswd: "YOUR_PASSWORD_HERE"
 
 Param:
   Move:
