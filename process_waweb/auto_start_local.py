@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
+"""
+auto_start_local.py
 
+Run local `wasanbon-webframework start` and return newly assigned uvicorn PIDs.
+No arguments; local handling only.
+"""
 
 from __future__ import annotations
 
@@ -61,7 +66,7 @@ def start_local() -> Dict[str, Any]:
     Returns: { 'returncode': int, 'new_pids': List[int], 'stdout': str }
     """
     proc = subprocess.run(
-        ["bash", "-lc", "wasanbon-webframework start"],
+        ["bash", "-lc", "source ~/wasanbon_webframework-main/.venv/bin/activate && " "wasanbon-webframework start"],
         capture_output=True,
         text=True,
         check=False,

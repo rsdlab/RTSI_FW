@@ -1,6 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+Simple execution checker used by setup checks.
+
+Args (comma separated via CLI):
+  middleware, timeout, communication_data, execution_name, [check_text]
+  middleware is optional (defaults to ros) for backward compatibility.
+
+ROS: rostopic echo on the topic (communication_data).
+  - If execution_name == "any": succeed when any message arrives.
+  - Otherwise: succeed when the echoed text contains execution_name.
+  - If no message arrives before timeout seconds, return false.
+
+RTM: placeholder that currently reports false (not specified in requirements).
+Outputs: prints "true" or "false" to stdout (lower-case).
+"""
 
 import sys
 import subprocess

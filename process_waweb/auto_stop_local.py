@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
+"""
+auto_stop_local.py
 
+Runs `wasanbon-webframework stop` locally and automatically terminates
+all listed uvicorn PIDs using pexpect. No arguments required.
+"""
 
 from __future__ import annotations
 import re

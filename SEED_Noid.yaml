@@ -1,6 +1,6 @@
 collect:
   engine:
-  - seed_hri
+  - common_hri_ros2
   rtm:
   - health_judge
   apt:
@@ -22,20 +22,33 @@ setup:
     package: seed_r7_ros_pkg
     actions:
       - controller: pc2
-      - cmd: 
+      - cmd:
       - system: seed_r7_ros_pkg moveit2
-      - module: 
+      - module:
     checks:
-      - controller: pc1 
+      - controller: pc1
       - cmd: python3 setup/data_monitor.py
         arg: 30,/move_group/status,any
+  - name: servo_on
+    package:
+    actions:
+      - controller:
+      - cmd:
+      - system:
+      - module:
+    checks:
+      - controller:
+      - cmd:
+        arg:
+      - system:
+      - module:
 
 run:
   pc1:
     system:
-    
+
     module:
-      
+
   pc2:
     system:
       - Audios audio2
@@ -44,29 +57,38 @@ run:
       - seed_r7_ros_pkg seed_action0630
   pc3:
     system:
-      
+
     module:
 
-  
+
 network:
 - id: pc1
   host: "YOUR_IP_HERE"
   user: "YOUR_USERNAME_HERE"
   pswd: "YOUR_PASSWORD_HERE"
 - id: pc2
+  local:
   host: "YOUR_IP_HERE"
   user: "YOUR_USERNAME_HERE"
   pswd: "YOUR_PASSWORD_HERE"
 - id: pc3
-  host: "YOUR_IP_HERE"
-  user: "YOUR_USERNAME_HERE"
-  pswd: "YOUR_PASSWORD_HERE"
-  
+  local:
+  host:
+  user:
+  pswd:
+
 Param:
   Move:
-    vel: /cmd_vel 
+    vel: /cmd_vel
     odom: /odom
     Kp: 0.4
     Ki: 0.1
   Person_Identification:
     image: /camera/image_raw
+
+ros:
+  version: 2
+
+
+ros2:
+  domain_id: 10

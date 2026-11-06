@@ -13,11 +13,12 @@ from typing import Dict, Optional, Tuple
 from concurrent.futures import ThreadPoolExecutor
 import json
 import shlex
+import shutil
 
 BASH = '/bin/bash'
 home_path = os.environ['HOME']
-ros_ws = os.environ['ROS_WS']
-rtm_ws = os.environ['RTM_WS']
+ros_ws = os.environ['ROS_WS']   #colcon_wsにする（export ROS_WS=~/colcon_ws）
+rtm_ws = os.environ['RTM_WS']   #仮　rtm_wsにする [AIRECとかみて合わせる]（export RTM_WS=~/rtm_ws）
 
 
 ############################## YAML形式のシナリオファイルの読み込み ##############################
@@ -32,6 +33,50 @@ def load_yaml(file_path):
 def join_yaml(_list, item):
     _list.append(item)
     return _list
+
+############################## robot.yamlのコピー ##############################
+def set_hri_config(robot_name, ros_version):
+    if ros_version == 1:
+        common_hri_dir = "common_hri_ros1"
+    elif ros_version == 2:
+        common_hri_dir = "common_hri_ros2"
+    else:
+        print(f"Unsupported ROS version: {ros_version}")
+
+    common_hri_path = os.path.join(
+        ros_ws,
+        "src",
+        common_hri_dir
+    )
+
+    if robot_name == "AIREC":
+        config_name = "airec"
+    elif robot_name == "SEED_Noid":
+        config_name = "seed"
+    elif robot_name == "HSR":
+        config_name = "hsr"
+    else:
+        raise ValueError(f"Unknown robot: {robot_name}")
+
+    config_path = os.path.join(
+        common_hri_path,
+        "config",
+        config_name
+    )
+
+    # robot.yaml をコピー
+    shutil.copy2(
+        os.path.join(config_path, "robot.yaml"),
+        os.path.join(common_hri_path, "robot.yaml")
+    )
+
+    # hri.xml をコピー
+    shutil.copy2(
+        os.path.join(config_path, "hri.xml"),
+        os.path.join(common_hri_path, "hri.xml")
+    )
+
+    print(f"HRI config changed to: {config_name}")
 
 ############################### スクリプトの依存関係を解析 (未使用)##############################
 # スクリプトのimport依存を分類する（未使用）
@@ -100,7 +145,7 @@ def analyze_script_dependencies(script_path, special_modules=None, ros_modules=N
 
         # パッケージが存在する場合
         if response.status_code == 200:
-            return True         
+            return True
 
         else:
             return False
@@ -135,7 +180,7 @@ def analyze_script_dependencies(script_path, special_modules=None, ros_modules=N
             ros_dependencies.append(module)
         elif module in ros_modules_add:  # 変換前のモジュール名を使用
             package_name = ros_module_to_package.get(module, module)
-            ros_add_dependencies.append(package_name) 
+            ros_add_dependencies.append(package_name)
         elif is_standard_lib(module):
             standard_dependencies.append(module)
         else:
@@ -263,7 +308,7 @@ def combined_collectfile(files):
 
 
 # ○run用のyamlを合成する関数
-# run用YAMLを統合して新規保存
+# run用YAMLを統合して新規保存  旧方式，未使用
 def combined_runfile(files):
     combined_file = 'Launch.yaml'
 
@@ -301,7 +346,7 @@ def create_new_run_yaml(system_commands, module_commands):
 
 # # ○hri-c用のlaunchのyamlを作成する
 # def update_yaml_launch_file(launch_files):
-    
+
 #     script_path = os.path.join(home_path, rtsi_dir) #ディレクトリ名
 #     os.chdir(script_path)
 
@@ -314,7 +359,7 @@ def create_new_run_yaml(system_commands, module_commands):
 #     route_key = 'run'
 
 #     output_file = item_replace_null(output_file, route_key, keys_to_replace)
-    
+
 #     with open(output_file , 'r') as infile:
 #         data = yaml.safe_load(infile)
 
@@ -338,7 +383,7 @@ def create_new_run_yaml(system_commands, module_commands):
 #         yaml.dump(data, outfile, sort_keys=False, default_flow_style=False)
 
 #     print(f"'run' section has been written to {output_file}")
-    
+
 #     return output_file
 
 # ○分析のメイン処理(collect)
@@ -347,13 +392,13 @@ def analyze(engine,functions):
 
     collect_list = []
 
-    for launch_file in functions:    
+    for launch_file in functions:
         print(f"HRI機能: {launch_file}")
 
     if engine == "None":
         return None
 
-    files_list = [os.path.join(home_path, "catkin_ws", "src", engine, "yaml", f"{file}.yaml") for file in functions]
+    files_list = [os.path.join(ros_ws, "src", engine, "yaml", f"{file}.yaml") for file in functions]
 
     return combined_collectfile(files_list)
 
@@ -362,7 +407,7 @@ def analyze(engine,functions):
 ################################ 分析のメイン処理(run) ###############################
 # ○
 # run用のsystem/moduleコマンドを生成してYAML化
-def analyze2(engine_name, robot_path, functions):  
+def analyze2(engine_name, robot_path, functions):
     # 新しい形式のコマンドリストを初期化
     system_commands = []
     module_commands = []
@@ -419,7 +464,7 @@ def get_enginefile(engine_name):
         return engine
     else:
         return "None"
-    
+
 
 # collectセクションに従い依存パッケージを取得
 def collect(yml_path):
@@ -430,9 +475,9 @@ def collect(yml_path):
         return
     with open(yml_path , 'r') as yml:
         config = yaml.safe_load(yml)
-    
 
- ######### wasanbon repository #####################    
+
+ ######### wasanbon repository #####################
     os.chdir(rtm_ws)
     # subprocess.run("pwd")
     rtm_item = config.get('collect', {}).get('rtm', [])
@@ -457,7 +502,7 @@ def collect(yml_path):
                 print(was_rep11)
                 call(was_rep11.split())
 
- ######### engine repository #####################    
+ ######### engine repository #####################
     path_ros = ros_ws + "/src/"
     os.chdir(path_ros)
     engine_item = config.get('collect', {}).get('engine', [])
@@ -498,7 +543,7 @@ def collect(yml_path):
             ccc = config['collect']['apt'][i]
             print(ccc)
             install = "sudo -S apt -y install  {}".format(ccc)
-            password = "rsdlab\n".encode()
+            password = "YOUR_PASSWORD\n".encode()
             subprocess.run(install.split(), input=password)
 
 
@@ -523,7 +568,7 @@ def collect(yml_path):
 
  ######### ros package #####################
     # subprocess.run("pwd")#workspace
-    dir_name = f"{ros_ws}/src" 
+    dir_name = f"{ros_ws}/src"
     os.chdir(dir_name)
     # os.chdir(os.environ['HOME'])
     # os.chdir('catkin_ws/src')
@@ -571,7 +616,7 @@ def collect(yml_path):
             move_file()
         else:
             print("move file for navigation")
-    
+
  ######### add package ######################
         dec = config['collect']['rtm'][0]
 
@@ -589,7 +634,7 @@ def serializer(RTC,FILE):
 
     subprocess.run("pwd")
     subprocess.run(['ls'])
-        
+
     ser = './{}'.format(FILE)
     if os.path.isfile(ser):
         print("File exit already")
@@ -599,27 +644,39 @@ def serializer(RTC,FILE):
 
 
 # ROS/RTMパッケージのビルドを実行
-def _build(yml_path,service):
+def _build(yml_path, service, ros_version):
     with open(yml_path , 'r') as yml:
         config = yaml.safe_load(yml)
 
  ######### Build  ros package #####################
     print("Build ROS package")
-    print("catkin build")
     os.chdir(ros_ws)
-    
-    subprocess.run(["rosdep", "install", "-y", "-r", "--from-paths", "src", "--ignore-src"])
-    subprocess.call(["catkin", "build",f"{service}"]) 
-    print("source devel/setup.bash")
-    subprocess.call("source ~/catkin_ws/devel/setup.bash",shell=True,executable = BASH) 
-    # subprocess.run("pwd")
 
- ######### Build rtm package #####################
+    subprocess.run(["rosdep", "install", "-y", "-r", "--from-paths", "src", "--ignore-src"])
+
+    if ros_version == 1:
+        print("catkin build")
+        subprocess.call(["catkin", "build", service])
+        print("source devel/setup.bash")
+        subprocess.call(f"source {ros_ws}/devel/setup.bash",shell=True,executable = BASH)
+
+    elif ros_version == 2:
+        print("colcon build")
+        subprocess.call(["colcon", "build", "--packages-select", service])
+        print("source install/setup.bash")
+        subprocess.call(f"source {ros_ws}/install/setup.bash",shell=True,executable = BASH)
+
+    else:
+        raise ValueError(f"Unsupported ROS version: {ros_version}")
+
+    ######### Build rtm package #####################
     leng_rtm = config['collect']['rtm']
     length_rtm = len(leng_rtm)
     for i in range(length_rtm):
         was_rep1 = config['collect']['rtm'][i]
-        dir_name = f"{rtm_ws}/{was_rep1}" 
+        if was_rep1 is None:
+            continue
+        dir_name = f"{rtm_ws}/{was_rep1}"
         os.chdir(dir_name)
         # os.chdir(os.environ['HOME'])
         # os.chdir('workspace/{}'.format(was_rep1))
@@ -713,30 +770,31 @@ def build(robot_path, service=None, network_info=None):
         curl_cmd = ["curl", "-X", "POST", "-u", "admin:admin", url]
         print(f"build: {pkg} @ {ip}")
         subprocess.run(curl_cmd, check=False)
-        
 
-######### Start name server ##################### 
-# roscore/rtm nameserverの起動確認と起動
+
+######### Start name server #####################
+# rtm nameserverの起動確認と起動
 def nameserver():
-    # ps aux | grep rosmaster | grep -v grep の出力行数を取得
+    ##ROS1用
+    # # ps aux | grep rosmaster | grep -v grep の出力行数を取得
+    # result = subprocess.run(["ps", "aux"], capture_output=True, text=True)
+
+    # # psコマンドの結果をフィルタリングして "rosmaster" を含む行を検索
+    # matching_lines = [line for line in result.stdout.splitlines() if "rosmaster" in line and "grep" not in line]
+
+    # # "rosmaster" に関連する行があれば、それが起動しているということ
+    # if not len(matching_lines) > 0:
+    #     print("roscoreが起動していません。roscoreを起動します...")
+    #     call(["gnome-terminal", "--", "roscore"])
+
+    #     # roscore起動まで待機
+    #     time.sleep(0.5)
+
+    # else:
+    #     print("roscoreはすでに起動しています．")
+
     result = subprocess.run(["ps", "aux"], capture_output=True, text=True)
-    
-    # psコマンドの結果をフィルタリングして "rosmaster" を含む行を検索
-    matching_lines = [line for line in result.stdout.splitlines() if "rosmaster" in line and "grep" not in line]
-    
-    # "rosmaster" に関連する行があれば、それが起動しているということ
-    if not len(matching_lines) > 0:
-        print("roscoreが起動していません。roscoreを起動します...")
-        call(["gnome-terminal", "--", "roscore"])
 
-        # roscore起動まで待機
-        time.sleep(0.5)
-
-    else:
-        print("roscoreはすでに起動しています．")
-
-    result = subprocess.run(["ps", "aux"], capture_output=True, text=True)
-    
     # psコマンドの結果をフィルタリングして "omni" を含む行を検索
     matching_lines = [line for line in result.stdout.splitlines() if "omni" in line and "grep" not in line]
     print(len(matching_lines))
@@ -765,6 +823,57 @@ def nameserver():
     else:
         print("nameserverはすでに起動しています．")
 
+#8000番WebAPIの生存確認
+def web_server_running(host):
+    try:
+        result = subprocess.run(
+            [
+                "curl",
+                "-s",
+                "-o", "/dev/null",
+                "-w", "%{http_code}",
+                "-u", "admin:admin",
+                f"http://{host}:8000/"
+            ],
+            capture_output=True,
+            text=True,
+            timeout=3
+        )
+
+        return result.returncode == 0 and result.stdout.strip() == "200"
+
+    except Exception:
+        return False
+
+def run_service_application(ros_version):
+    print("サービスアプリケーションを実行")
+
+    if ros_version == 1:
+        command = "rosrun rois_env_ros1 service_app_ros1.py"
+
+    elif ros_version == 2:
+        command = "ros2 run rois_env_ros2 service_app_ros2.py"
+
+    else:
+        raise ValueError(
+            f"Unsupported ROS version: {ros_version}"
+        )
+
+    P = subprocess.Popen([
+        "gnome-terminal",
+        "--wait",
+        "--",
+        "bash",
+        "-i",
+        "-c",
+        f"{command}; echo; echo 'service_app finished.'; exec bash"
+    ])
+
+    print("動作選択")
+    return_code = P.wait()
+    print("動作完了")
+
+    return return_code
 
 # ○
 # Launch.yamlのsystem/moduleコマンドを起動
@@ -779,7 +888,7 @@ def run(yml_path = None):
     else:
         with open(yml_path , 'r') as yml:
             config = yaml.safe_load(yml)
-    
+
     print(config)
 
     # system コマンドの実行
@@ -798,7 +907,7 @@ def run(yml_path = None):
                         print(f"Error getting directory for package {package_name}: {stderr}")
                         continue
                     package_dir = stdout.strip()
-                    
+
                     # コマンド実行
                     exec_cmd = (
                         f"cd {package_dir} && ./mgr.py system run {command_name}"
@@ -847,7 +956,7 @@ def run(yml_path = None):
             print("No module commands to execute.")
     else:
         print("No 'module' section in run configuration.")
-    
+
 import yaml
 import subprocess
 
@@ -1179,7 +1288,7 @@ def process_setup(yml_path: str) -> bool:
 # ○YAMLからシナリオを読み込みサービス名とタスクを抽出する
 # シナリオから機能名リストを抽出
 def scenario_analyze(scenario_path):
-   
+
     os.chdir(system_dir)
 
     scenario_data = load_yaml(scenario_path)
@@ -1216,13 +1325,13 @@ def stop_all_processes():
 # 指定IP上のRTCを検索してDeactivate
 def deactivate_remote_rtcs(target_ip):
     print(f"--- Searching for RTCs on {target_ip} ---")
-    
+
     #rtfind コマンドを実行してリストを取得
     try:
         result = subprocess.run(
-            ["rtfind", f"{target_ip}/"], 
-            capture_output=True, 
-            text=True, 
+            ["rtfind", f"{target_ip}/"],
+            capture_output=True,
+            text=True,
             check=True
         )
     except subprocess.CalledProcessError as e:
@@ -1235,10 +1344,10 @@ def deactivate_remote_rtcs(target_ip):
     count = 0
     for path in found_paths:
         path = path.strip()
-        
+
         if path.endswith(".rtc"):
             print(f"Deactivating: {path}")
-            
+
             try:
                 subprocess.run(["rtdeact", path], check=False)
                 count += 1
@@ -1249,7 +1358,7 @@ def deactivate_remote_rtcs(target_ip):
         print("No active RTCs found to deactivate.")
     else:
         print(f"--- Finished. Deactivation attempted for {count} components. ---")
-    
+
 # robot YAMLからネットワーク情報を構造化
 def get_network_info(master_ip, robot_path):
     config_data = load_yaml(robot_path)
@@ -1280,29 +1389,38 @@ def get_network_info(master_ip, robot_path):
     return network_config
 
 # ネットワーク設定を一括適用
-def set_network(network_info, robot_path):
+def set_network(network_info, robot_path, ros_version, domain_id=None):
     print("set_start")
 
-    # master_ipのbash確認
-    ip_state=check_master(network_info)
-    
-    #設定済みだったら、
-    if ip_state==True:
-        print("state true")
-        # 設定
-        set_server(network_info, robot_path)
+    if ros_version == 1:
+        # master_ipのbash確認
+        ip_state=check_master(network_info)
 
-   
-    #設定済みじゃなかったら
-    else:
-        print("state false")
-        
-        # rosのみ変更
-        set_ros(network_info)
+        #設定済みだったら、
+        if ip_state==True:
+            print("state true")
+            set_server(network_info, robot_path, ros_version)
 
-        # パッケージごとに変更
-        set_server(network_info, robot_path)
+        #設定済みじゃなかったら
+        else:
+            print("state false")
+            # rosのみ変更
+            set_ros(network_info)
+            # パッケージごとに変更
+            set_server(network_info, robot_path, ros_version)
 
+    elif ros_version == 2:
+        set_server(network_info, robot_path, ros_version, domain_id)
+        ros2_state = check_ros2(network_info, domain_id)
+
+        if ros2_state:
+            print("state true")
+            print("ROS2 setting is already configured.")
+        else:
+            print("state false")
+            set_ros2(network_info, domain_id)
+
+        return set_server(network_info, robot_path, ros_version, domain_id)
 
 # master設定の有効性をリモートチェック
 def check_master(network_info):
@@ -1356,6 +1474,63 @@ def check_master(network_info):
         if proc.returncode != 0:
             print(f"{host} へのチェックに失敗しました: {proc.stderr.strip()}")
             return False
+        return parse_is_ok(proc.stdout)
+
+    results = [run_check(host) for host in targets]
+    return all(results)
+
+#ROS2用DOMAIN_ID確認
+def check_ros2(network_info, domain_id):
+    print("check ros2")
+
+    if not network_info:
+        print("network_infoが指定されていません。")
+        return False
+
+    targets = []
+
+    local_ip = network_info.get("local")
+    if local_ip:
+        targets.append(local_ip)
+
+    managed_hosts = network_info.get("managed") or []
+    targets.extend(managed_hosts)
+
+    def parse_is_ok(raw_output: str) -> bool:
+        lines = [line.strip() for line in raw_output.splitlines() if line.strip()]
+
+        for line in reversed(lines):
+            try:
+                payload = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+
+            if "is_ok" in payload:
+                return bool(payload["is_ok"])
+
+        print(f"予期しない応答: {raw_output}")
+        return False
+
+    def run_check(host: str) -> bool:
+        if not host:
+            return False
+
+        curl_cmd = (
+            f"curl -X GET -u admin:admin "
+            f"http://{host}:8000/ros2/check/{domain_id}"
+        )
+
+        proc = subprocess.run(
+            ["bash", "-lc", curl_cmd],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        if proc.returncode != 0:
+            print(f"{host} のROS2設定確認に失敗しました: {proc.stderr.strip()}")
+            return False
+
         return parse_is_ok(proc.stdout)
 
     results = [run_check(host) for host in targets]
@@ -1419,25 +1594,98 @@ def set_ros(network_info):
     results = [run_set(host) for host in targets]
     return all(results)
 
-# Wasanbon-Webのserver setを各ホストへ適用
-def set_server(network_info, robot_path):
+#開発PC全体にDOMAIN_IDを設定
+def set_ros2(network_info, domain_id):
+    print("set_ros2")
+
+    if not network_info:
+        raise ValueError("network_info が指定されていません。")
+
+    targets = []
+
+    local_ip = network_info.get("local")
+    if local_ip:
+        targets.append(local_ip)
+
+    managed_hosts = network_info.get("managed") or []
+    for host in managed_hosts:
+        if host:
+            targets.append(host)
+
+    if not targets:
+        print("set_ros2: 対象ホストが見つかりませんでした。")
+        return False
+
+    def parse_is_ok(raw_output: str) -> bool:
+        lines = [line.strip() for line in raw_output.splitlines() if line.strip()]
+
+        for line in reversed(lines):
+            try:
+                payload = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+
+            if "is_ok" in payload:
+                return bool(payload["is_ok"])
+
+        return False
+
+    def run_set(host: str) -> bool:
+        curl_cmd = (
+            f"curl -X PUT -u admin:admin "
+            f"http://{host}:8000/set/ros2/{domain_id}"
+        )
+
+        proc = subprocess.run(
+            ["bash", "-lc", curl_cmd],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        if proc.returncode != 0:
+            print(f"{host} で set_ros2 実行に失敗しました: {proc.stderr.strip()}")
+            return False
+
+        success = parse_is_ok(proc.stdout)
+
+        if not success:
+            print(f"{host} で set_ros2 応答が異常です: {proc.stdout.strip()}")
+
+        return success
+
+    results = [run_set(host) for host in targets]
+    return all(results)
+
+
+# Wasanbon-Webの設定
+# ROS2 packageには domain_id、RTM packageには nameserver_ip を渡す
+def set_server(network_info, robot_path, ros_version, domain_id=None):
     print("set_server")
+
     if not network_info:
         raise ValueError("network_info が指定されていません。")
     if not robot_path:
         raise ValueError("robot_path が指定されていません。")
+    if ros_version == 2 and domain_id is None:
+        raise ValueError(
+            "ROS2の場合、domain_id が必要です。"
+        )
 
-    master_ip = network_info.get("master")
-    if not master_ip:
+    # ROS2ではROS Masterはないが、
+    # RTM NameServerを立てるPCのIPとしてこの値は引き続き使用する
+    nameserver_ip = network_info.get("master")
+    if not nameserver_ip:
         raise ValueError("network_info に 'master' が含まれていません。")
 
-    # ロボット設定ファイルから 'run' と 'network' のセクションを読み込む
+    # ロボット設定ファイルから run / network を取得
     config = load_yaml(robot_path)
     run_section = config.get("run") or {}
     network_section = config.get("network") or []
 
-    # network設定のホストIPをキーとして、対応するrun設定を引けるように辞書を作成
+    # host -> run設定 の対応表
     run_by_host = {}
+
     if isinstance(run_section, dict):
         id_to_run = run_section
     else:
@@ -1447,159 +1695,321 @@ def set_server(network_info, robot_path):
     for entry in network_section:
         pc_id = entry.get("id")
         host = entry.get("host")
+
         if pc_id and host and pc_id in id_to_run:
             run_by_host[host] = id_to_run[pc_id]
 
-    # 'package_name command_name' 形式の文字列を分割するヘルパー関数
+    # "package_name command_name" を分解
     def parse_entry(entry: str) -> Tuple[str, str]:
         parts = entry.split(maxsplit=1)
+
         if len(parts) == 1:
             return parts[0], ""
+
         return parts[0], parts[1]
 
-    # パッケージのディレクトリをキャッシュするための辞書
+    # package directory のキャッシュ
     package_dir_cache: Dict[str, str] = {}
 
     def get_package_dir(package: str) -> Optional[str]:
+
         if package in package_dir_cache:
             return package_dir_cache[package]
+
         proc = subprocess.run(
-            ["wasanbon-admin.py", "package", "directory", package],
+            [
+                "wasanbon-admin.py",
+                "package",
+                "directory",
+                package,
+            ],
             capture_output=True,
             text=True,
             check=False,
         )
+
         if proc.returncode != 0:
-            print(f"パッケージ {package} のディレクトリ取得に失敗しました: {proc.stderr.strip()}")
+            print(
+                f"パッケージ {package} のディレクトリ取得に失敗しました: "
+                f"{proc.stderr.strip()}"
+            )
             return None
+
         directory = proc.stdout.strip()
         package_dir_cache[package] = directory
+
         return directory
 
-    # curlコマンドのJSON応答から 'is_ok' の値を取得するヘルパー関数
+    # curl応答JSONから is_ok を取得
     def parse_is_ok(raw_output: str) -> Optional[bool]:
-        lines = [line.strip() for line in raw_output.splitlines() if line.strip()]
+
+        lines = [
+            line.strip()
+            for line in raw_output.splitlines()
+            if line.strip()
+        ]
+
         for line in reversed(lines):
             try:
                 payload = json.loads(line)
+
             except json.JSONDecodeError:
                 continue
+
             if "is_ok" in payload:
                 return bool(payload["is_ok"])
+
         return None
 
     success = True
 
-    # --- ローカルホストの設定 (mgr.py を使用) ---
+    # =========================================================
+    # ローカルホスト
+    # =========================================================
+
     local_host = network_info.get("local")
     local_ip = local_host
+
     if local_host:
+
         local_run = run_by_host.get(local_host)
+
         if not local_run:
-            print(f"ローカルホスト {local_host} に対する run 設定が見つかりません。")
+            print(
+                f"ローカルホスト {local_host} に対する "
+                "run 設定が見つかりません。"
+            )
+
         else:
-            # systemコマンドに対する設定
+
+            # -------------------------
+            # system
+            # -------------------------
+
             for entry in local_run.get("system", []) or []:
+
                 package, system_name = parse_entry(entry)
+
                 package_dir = get_package_dir(package)
-                # パッケージのディレクトリが見つからなければスキップ
+
                 if not package_dir:
                     success = False
                     continue
-                cmd = f"cd {package_dir} && ./mgr.py server set {master_ip} {local_ip}"
+
+                # ROS2:
+                #   domain_id
+                #
+                # RTM:
+                #   nameserver_ip
+                #
+                # Wasanbon側でpackage種別を判定して使い分ける想定
+                if ros_version == 1:
+                    cmd = (
+                        f"cd {package_dir} && "
+                        f"./mgr.py server set "
+                        f"{nameserver_ip} "
+                        f"{local_ip}"
+                    )
+
+                elif ros_version == 2:
+                    cmd = (
+                        f"cd {package_dir} && "
+                        f"./mgr.py server set "
+                        f"{nameserver_ip} "
+                        f"{local_ip} "
+                        f"{domain_id}"
+                    )
+
                 if system_name:
                     cmd += f" {system_name}"
+
                 proc = subprocess.run(
                     ["bash", "-lc", cmd],
                     capture_output=True,
                     text=True,
                     check=False,
                 )
+
                 if proc.returncode != 0:
-                    print(f"{entry} の server set に失敗しました: {proc.stderr.strip()}")
+                    print(
+                        f"{entry} の server set に失敗しました: "
+                        f"{proc.stderr.strip()}"
+                    )
                     success = False
 
-            # moduleコマンドに対する設定
+            # -------------------------
+            # module
+            # -------------------------
+
             for entry in local_run.get("module", []) or []:
+
                 package, _module_name = parse_entry(entry)
+
                 package_dir = get_package_dir(package)
-                # パッケージのディレクトリが見つからなければスキップ
+
                 if not package_dir:
                     success = False
                     continue
-                cmd = f"cd {package_dir} && ./mgr.py server set {master_ip} {local_ip}"
+
+                if ros_version == 1:
+                    cmd = (
+                        f"cd {package_dir} && "
+                        f"./mgr.py server set "
+                        f"{nameserver_ip} "
+                        f"{local_ip}"
+                    )
+
+                elif ros_version == 2:
+                    cmd = (
+                        f"cd {package_dir} && "
+                        f"./mgr.py server set "
+                        f"{nameserver_ip} "
+                        f"{local_ip} "
+                        f"{domain_id}"
+                    )
+
                 proc = subprocess.run(
                     ["bash", "-lc", cmd],
                     capture_output=True,
                     text=True,
                     check=False,
                 )
+
                 if proc.returncode != 0:
-                    print(f"{entry} の module server set に失敗しました: {proc.stderr.strip()}")
+                    print(
+                        f"{entry} の module server set に失敗しました: "
+                        f"{proc.stderr.strip()}"
+                    )
                     success = False
 
-    # --- リモートホスト（Managed hosts）の設定 (curl を使用) ---
+    # =========================================================
+    # リモートホスト
+    # =========================================================
+
     managed_hosts = network_info.get("managed") or []
+
     for host in managed_hosts:
+
         run_cfg = run_by_host.get(host)
+
         if not run_cfg:
-            print(f"managed ホスト {host} の run 設定が見つかりません。")
+            print(
+                f"managed ホスト {host} の run 設定が見つかりません。"
+            )
             success = False
             continue
 
-        # systemコマンドに対する設定
+        # -------------------------
+        # system
+        # -------------------------
+
         for entry in run_cfg.get("system", []) or []:
+
             package, system_name = parse_entry(entry)
+
             if not system_name:
-                print(f"System entry {entry} に system 名が含まれていません。")
+                print(
+                    f"System entry {entry} に "
+                    "system 名が含まれていません。"
+                )
                 success = False
                 continue
-            curl_cmd = (
-                f"curl -X PUT -u admin:admin "
-                f"http://{host}:8000/dev/packages/{package}/server/set/{master_ip}/{system_name}"
-            )
+
+            # Wasanbon-Web側もROS2対応として、
+            # nameserver_ip + domain_id を受け取れるように拡張する
+            if ros_version == 1:
+                curl_cmd = (
+                    f"curl -X PUT -u admin:admin "
+                    f"http://{host}:8000/"
+                    f"dev/packages/{package}/server/set/"
+                    f"{nameserver_ip}/{system_name}"
+                )
+
+            elif ros_version == 2:
+                curl_cmd = (
+                    f"curl -X PUT -u admin:admin "
+                    f"http://{host}:8000/"
+                    f"dev/packages/{package}/server/set/"
+                    f"{nameserver_ip}/{domain_id}/{system_name}"
+                )
+
             proc = subprocess.run(
                 ["bash", "-lc", curl_cmd],
                 capture_output=True,
                 text=True,
                 check=False,
             )
+
             if proc.returncode != 0:
-                print(f"{host} 向け system {entry} の設定に失敗しました: {proc.stderr.strip()}")
+                print(
+                    f"{host} 向け system {entry} の設定に失敗しました: "
+                    f"{proc.stderr.strip()}"
+                )
                 success = False
+
             else:
                 is_ok = parse_is_ok(proc.stdout)
+
                 if is_ok is False:
-                    print(f"{host} 向け system {entry} の設定が失敗応答です: {proc.stdout.strip()}")
+                    print(
+                        f"{host} 向け system {entry} の設定が失敗応答です: "
+                        f"{proc.stdout.strip()}"
+                    )
                     success = False
 
-        # moduleコマンドに対する設定
+        # -------------------------
+        # module
+        # -------------------------
+
         for entry in run_cfg.get("module", []) or []:
+
             package, _module_name = parse_entry(entry)
-            curl_cmd = (
-                f"curl -X PUT -u admin:admin "
-                f"http://{host}:8000/dev/packages/{package}/server/set/{master_ip}"
-            )
+
+            if ros_version == 1:
+                curl_cmd = (
+                    f"curl -X PUT -u admin:admin "
+                    f"http://{host}:8000/"
+                    f"dev/packages/{package}/server/set/"
+                    f"{nameserver_ip}"
+                )
+
+            elif ros_version == 2:
+                curl_cmd = (
+                    f"curl -X PUT -u admin:admin "
+                    f"http://{host}:8000/"
+                    f"dev/packages/{package}/server/set/"
+                    f"{nameserver_ip}/{domain_id}"
+                )
+
             proc = subprocess.run(
                 ["bash", "-lc", curl_cmd],
                 capture_output=True,
                 text=True,
                 check=False,
             )
+
             if proc.returncode != 0:
-                print(f"{host} 向け module {entry} の設定に失敗しました: {proc.stderr.strip()}")
+                print(
+                    f"{host} 向け module {entry} の設定に失敗しました: "
+                    f"{proc.stderr.strip()}"
+                )
                 success = False
+
             else:
                 is_ok = parse_is_ok(proc.stdout)
-                if is_ok is False:
-                    print(f"{host} 向け module {entry} の設定が失敗応答です: {proc.stdout.strip()}")
-                    success = False
 
+                if is_ok is False:
+                    print(
+                        f"{host} 向け module {entry} の設定が失敗応答です: "
+                        f"{proc.stdout.strip()}"
+                    )
+                    success = False
 
     return success
 
+
 # roscoreとnameserverの起動をAPIで実行
-def server_start(network_info):
+def server_start(network_info, ros_version):
     print("server_start")
     if not network_info:
         raise ValueError("network_info が指定されていません。")
@@ -1608,29 +2018,38 @@ def server_start(network_info):
     if not master_ip:
         raise ValueError("network_info に 'master' が含まれていません。")
 
-    endpoints = [
-        f"http://{master_ip}:8000/roscore/run",
-        f"http://{master_ip}:8000/nameserver/start",
-    ]
+    urls = []
 
-    success = True
-    for url in endpoints:
-        curl_cmd = f"curl -X POST -u admin:admin {url}"
-        proc = subprocess.run(
-            ["bash", "-lc", curl_cmd],
-            capture_output=True,
-            text=True,
-            check=False,
+    # ROS1だけroscoreを起動
+    if ros_version == 1:
+        urls.append(
+            f"http://{master_ip}:8000/roscore/run"
         )
-        if proc.returncode != 0:
-            print(f"{url} の起動に失敗しました: {proc.stderr.strip()}")
-            success = False
-        else:
-            output = proc.stdout.strip()
-            if output:
-                print(f"{url} 応答: {output}")
 
-    return success
+    # RTM NameServerはROS1/ROS2どちらでも使用
+    urls.append(
+        f"http://{master_ip}:8000/nameserver/start"
+    )
+
+    for url in urls:
+        try:
+            result = subprocess.run(
+                ["curl", "-X", "POST", "-u", "admin:admin", url,],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            if result.returncode != 0:
+                print(
+                    f"{url} の起動に失敗しました: "
+                    f"{result.stderr}"
+                )
+            else:
+                print(f"{url} 起動要求成功")
+
+        except Exception as e:
+            print(f"{url} の起動中にエラー: {e}")
 
 
 # Wasanbon-Webをローカル/リモート停止
@@ -1735,11 +2154,47 @@ def wa_start(network_info=None):
 # ○
 # CLI引数に応じた処理の分岐
 def main(robot_path, service, functions):
+
+    config = load_yaml(robot_path)
+
+    ros_config = config.get("ros") or {}
+    ros_version = ros_config.get("version")
+
+    if ros_version is None:
+        raise ValueError(
+            "robot yaml に ros.version が設定されていません。"
+        )
+
+    ros_version = int(ros_version)
+
+    domain_id = None
+
+    if ros_version == 2:
+        ros2_config = config.get("ros2") or {}
+        domain_id = ros2_config.get("domain_id")
+
+        if domain_id is None:
+            raise ValueError(
+                "ROS2の場合、robot yaml に ros2.domain_id が必要です。"
+            )
+
+        print(f"ROS version: ROS2")
+        print(f"ROS_DOMAIN_ID: {domain_id}")
+
+    elif ros_version == 1:
+        print("ROS version: ROS1")
+
+    else:
+        raise ValueError(
+            f"Unsupported ROS version: {ros_version}"
+        )
+
     if len(args)>4: # 4以上の場合、自動ネットワーク設定が必要と判断
         master_ip = args[4]
         network_info = get_network_info(master_ip, robot_path)
         print(network_info)
-        # wa_start(network_info)
+        if not web_server_running(master_ip):
+            wa_start(network_info)
 
     if args[3] == 'collect':
         ###ロボットファイルに含まれているソフトウェアを収集
@@ -1757,26 +2212,25 @@ def main(robot_path, service, functions):
 
     elif args[3] == 'build':
         print("system build")
-        _build(robot_path, service)
+        _build(robot_path, service, ros_version)
         build(robot_path, service, network_info)
 
     elif args[3] == 'set':
         print("system set")
-        set_network(network_info, robot_path)
+        set_network(network_info, robot_path, ros_version, domain_id)
 
 
     elif args[3] == 'run':
         print("system run")
         # サーバー起動
-        server_start(network_info)
+        server_start(network_info, ros_version)
         if len(args)<5:
-            nameserver() 
-            # wa_start(network_info) #wasanbon-webframeworkサーバー自動起動関数
+            nameserver()
 
         ## ロボットセットアップモジュール起動
         if not process_setup(robot_path):
             return
-        
+
         ## 他モジュール起動
         run_web(robot_path)
         print(f"HRI package {service}")
@@ -1785,33 +2239,28 @@ def main(robot_path, service, functions):
 
         # user_input = input("サービスアプリケーションを実行しますか：(Y/N)")
         # if user_input == "Y" or user_input == "y":
-        #     P = subprocess.Popen(["gnome-terminal", "--", "bash", "-i", "-c", "rosrun rois_env service_app4.py"])
+        #     P = subprocess.Popen(["gnome-terminal", "--", "bash", "-i", "-c", "rosrun rois_env service_app_ros1.py"])
         #     print("シナリオ動作中....")
         #     return_code = P.wait() # service_app.py の終了を待機
         #     print(f"シナリオ動作完了")
-        
+
         time.sleep(4)
-        print("サービスアプリケーションを実行")
-        P = subprocess.Popen(["gnome-terminal", "--", "bash", "-i", "-c", "rosrun rois_env service_app4.py"])
-        print("シナリオ動作中....")
-        return_code = P.wait() # service_app.py の終了を待機
-        print(f"シナリオ動作完了")
-    
+        run_service_application(ros_version)
+
     elif args[3] == 'setrun':
         print("system set & run")
         ## 通信設定
-        set_network(network_info, robot_path)
+        set_network(network_info, robot_path, ros_version, domain_id)
 
         ## サーバー起動
-        server_start(network_info)
+        server_start(network_info, ros_version)
         if len(args)<5:
-            nameserver() 
-            # wa_start(network_info)   
+            nameserver()
 
         ## ロボットセットアップモジュール起動
         if not process_setup(robot_path):
             return
-        
+
         ## 他モジュール起動
         run_web(robot_path)
         print(f"HRI package {service}")
@@ -1819,11 +2268,7 @@ def main(robot_path, service, functions):
         run(launch_file)
 
         time.sleep(4)
-        print("サービスアプリケーションを実行")
-        P = subprocess.Popen(["gnome-terminal", "--", "bash", "-i", "-c", "rosrun rois_env service_app4.py"])
-        print("シナリオ動作中....")
-        return_code = P.wait() # service_app.py の終了を待機
-        print(f"シナリオ動作完了")
+        run_service_application(ros_version)
 
         # user_input = input("サービスアプリケーションを実行しますか：(Y/N)")
         # if user_input == "Y" or user_input == "y":
@@ -1837,7 +2282,7 @@ def main(robot_path, service, functions):
             stop_all_processes()
         else:
             print("allか否かがわかりません")
-    
+
     elif args[3] == 'nameserver':
         print("sytem run")
         nameserver()
@@ -1848,15 +2293,20 @@ def main(robot_path, service, functions):
 # ○
 if __name__ == '__main__':
     # print("start")
-    rtsi_dir = "RTSI_FWasanbonWeb_master"
+    rtsi_dir = "RTSI_FW"
 
     args = sys.argv
 
-    print(f"ROBOT NAME :{args[1]}")    
+    print(f"ROBOT NAME :{args[1]}")
 
-    system_dir = f"{home_path}/{rtsi_dir}"  
+    system_dir = f"{home_path}/{rtsi_dir}"
     robot_path = f"{system_dir}/{args[1]}.yaml"
     scenario_path = f"{system_dir}/{args[2]}.yaml"
+
+    robot_config = load_yaml(robot_path)
+    ros_version = int(robot_config["ros"]["version"])
+
+    set_hri_config(args[1], ros_version)
 
     service_package = load_yaml(robot_path)['collect']['engine'][0]
     functions = scenario_analyze(scenario_path)

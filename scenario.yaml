@@ -1,22 +1,28 @@
 scenario:
+  - task: Person_Detection
+    act: ユーザと認識する
+    arg: ユーザ
+  - task: Person_Localization
+    act: ユーザと認識する
+    arg: ユーザ
   - task: Person_Identification
     act: ユーザと認識する
     arg: ユーザ
   - task: Speech_Synthesis
     act: ようこそ説明会へ
     arg: welcome
-  - task: Speech_Synthesis
-    act: 案内開始を伝える
-    arg: follow_me
-  - task: Move
-    act: 席の方に回転する
-    arg: [[0, 0, 0], [0, 180]]
-  - task: Move
-    act: 席まで移動する
-    arg: [[800, 0, 0], [0, 0]]
-  - task: Approach
-    act: 左腕をユーザの近くまで動かす
-    arg: approach3
-  - task: Speech_Synthesis
-    act: こちらへどうぞ
-    arg: this
+  # - task: Speech_Synthesis
+  #   act: 案内開始を伝える
+  #   arg: follow_me
+  # - task: Move
+  #   act: 席の方に回転する
+  #   arg: [[0, 0, 0], [0, 0]]
+  # - task: Leave
+  #   act: 席まで移動する
+  #   arg: [[0, 0, 0], [0, 0]]
+  # - task: Approach
+  #   act: 左腕をユーザの近くまで動かす
+  #   arg: approach3
+  # - task: Speech_Synthesis
+  #   act: こちらへどうぞ
+  #   arg: this

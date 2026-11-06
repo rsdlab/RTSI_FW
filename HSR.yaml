@@ -1,0 +1,56 @@
+collect:
+  rtm:
+    - null
+
+  engine:
+    - common_hri_ros2
+
+  apt:
+    - null
+
+  aptros:
+    - null
+
+  pip:
+    - null
+
+  git:
+    - url: null
+      repo: null
+      branch: null
+
+
+setup: []
+
+
+run:
+  pc1:
+    system:
+    module:
+      - hsr_hri_action Navigation_action
+      - hsr_hri_action Move_action
+      - hsr_hri_action Approach_action
+      - hsr_hri_action Object_Grasping_action
+      - hsr_hri_action Object_Release_action
+      - hsr_hri_action Leave_action
+      - hsr_hri_action Speech_Synthesis_action
+      - hsr_hri_action Speech_Recognition_action
+
+
+network:
+  - id: pc1
+    local: true
+    host: "YOUR_IP_HERE"
+    user: "YOUR_USERNAME_HERE"
+    pswd: "YOUR_PASSWORD_HERE"  
+
+
+Param: {}
+
+
+ros:
+  version: 2
+
+
+ros2:
+  domain_id: 1

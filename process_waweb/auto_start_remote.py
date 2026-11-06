@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
+"""
+auto_start_remote.py
 
+Run remote `wasanbon-webframework start --other_hosts` for a single host.
+Provides a function without CLI arguments: start_remote(host, user, password).
+Local handling is not included here.
+"""
 
 from __future__ import annotations
 
