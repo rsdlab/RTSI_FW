@@ -42,7 +42,7 @@ def set_hri_config(robot_name, ros_version):
         common_hri_dir = "common_hri_ros2"
     else:
         print(f"Unsupported ROS version: {ros_version}")
-
+    
     common_hri_path = os.path.join(
         ros_ws,
         "src",
@@ -145,7 +145,7 @@ def analyze_script_dependencies(script_path, special_modules=None, ros_modules=N
 
         # パッケージが存在する場合
         if response.status_code == 200:
-            return True
+            return True         
 
         else:
             return False
@@ -180,7 +180,7 @@ def analyze_script_dependencies(script_path, special_modules=None, ros_modules=N
             ros_dependencies.append(module)
         elif module in ros_modules_add:  # 変換前のモジュール名を使用
             package_name = ros_module_to_package.get(module, module)
-            ros_add_dependencies.append(package_name)
+            ros_add_dependencies.append(package_name) 
         elif is_standard_lib(module):
             standard_dependencies.append(module)
         else:
@@ -346,7 +346,7 @@ def create_new_run_yaml(system_commands, module_commands):
 
 # # ○hri-c用のlaunchのyamlを作成する
 # def update_yaml_launch_file(launch_files):
-
+    
 #     script_path = os.path.join(home_path, rtsi_dir) #ディレクトリ名
 #     os.chdir(script_path)
 
@@ -359,7 +359,7 @@ def create_new_run_yaml(system_commands, module_commands):
 #     route_key = 'run'
 
 #     output_file = item_replace_null(output_file, route_key, keys_to_replace)
-
+    
 #     with open(output_file , 'r') as infile:
 #         data = yaml.safe_load(infile)
 
@@ -383,7 +383,7 @@ def create_new_run_yaml(system_commands, module_commands):
 #         yaml.dump(data, outfile, sort_keys=False, default_flow_style=False)
 
 #     print(f"'run' section has been written to {output_file}")
-
+    
 #     return output_file
 
 # ○分析のメイン処理(collect)
@@ -392,7 +392,7 @@ def analyze(engine,functions):
 
     collect_list = []
 
-    for launch_file in functions:
+    for launch_file in functions:    
         print(f"HRI機能: {launch_file}")
 
     if engine == "None":
@@ -407,7 +407,7 @@ def analyze(engine,functions):
 ################################ 分析のメイン処理(run) ###############################
 # ○
 # run用のsystem/moduleコマンドを生成してYAML化
-def analyze2(engine_name, robot_path, functions):
+def analyze2(engine_name, robot_path, functions):  
     # 新しい形式のコマンドリストを初期化
     system_commands = []
     module_commands = []
@@ -464,7 +464,7 @@ def get_enginefile(engine_name):
         return engine
     else:
         return "None"
-
+    
 
 # collectセクションに従い依存パッケージを取得
 def collect(yml_path):
@@ -475,9 +475,9 @@ def collect(yml_path):
         return
     with open(yml_path , 'r') as yml:
         config = yaml.safe_load(yml)
+    
 
-
- ######### wasanbon repository #####################
+ ######### wasanbon repository #####################    
     os.chdir(rtm_ws)
     # subprocess.run("pwd")
     rtm_item = config.get('collect', {}).get('rtm', [])
@@ -502,7 +502,7 @@ def collect(yml_path):
                 print(was_rep11)
                 call(was_rep11.split())
 
- ######### engine repository #####################
+ ######### engine repository #####################    
     path_ros = ros_ws + "/src/"
     os.chdir(path_ros)
     engine_item = config.get('collect', {}).get('engine', [])
@@ -543,7 +543,7 @@ def collect(yml_path):
             ccc = config['collect']['apt'][i]
             print(ccc)
             install = "sudo -S apt -y install  {}".format(ccc)
-            password = "YOUR_PASSWORD\n".encode()
+            password = "rsdlab\n".encode()
             subprocess.run(install.split(), input=password)
 
 
@@ -568,7 +568,7 @@ def collect(yml_path):
 
  ######### ros package #####################
     # subprocess.run("pwd")#workspace
-    dir_name = f"{ros_ws}/src"
+    dir_name = f"{ros_ws}/src" 
     os.chdir(dir_name)
     # os.chdir(os.environ['HOME'])
     # os.chdir('catkin_ws/src')
@@ -616,7 +616,7 @@ def collect(yml_path):
             move_file()
         else:
             print("move file for navigation")
-
+    
  ######### add package ######################
         dec = config['collect']['rtm'][0]
 
@@ -634,7 +634,7 @@ def serializer(RTC,FILE):
 
     subprocess.run("pwd")
     subprocess.run(['ls'])
-
+        
     ser = './{}'.format(FILE)
     if os.path.isfile(ser):
         print("File exit already")
@@ -651,20 +651,20 @@ def _build(yml_path, service, ros_version):
  ######### Build  ros package #####################
     print("Build ROS package")
     os.chdir(ros_ws)
-
+    
     subprocess.run(["rosdep", "install", "-y", "-r", "--from-paths", "src", "--ignore-src"])
 
     if ros_version == 1:
         print("catkin build")
         subprocess.call(["catkin", "build", service])
         print("source devel/setup.bash")
-        subprocess.call(f"source {ros_ws}/devel/setup.bash",shell=True,executable = BASH)
+        subprocess.call(f"source {ros_ws}/devel/setup.bash",shell=True,executable = BASH) 
 
     elif ros_version == 2:
         print("colcon build")
         subprocess.call(["colcon", "build", "--packages-select", service])
         print("source install/setup.bash")
-        subprocess.call(f"source {ros_ws}/install/setup.bash",shell=True,executable = BASH)
+        subprocess.call(f"source {ros_ws}/install/setup.bash",shell=True,executable = BASH) 
 
     else:
         raise ValueError(f"Unsupported ROS version: {ros_version}")
@@ -676,7 +676,7 @@ def _build(yml_path, service, ros_version):
         was_rep1 = config['collect']['rtm'][i]
         if was_rep1 is None:
             continue
-        dir_name = f"{rtm_ws}/{was_rep1}"
+        dir_name = f"{rtm_ws}/{was_rep1}" 
         os.chdir(dir_name)
         # os.chdir(os.environ['HOME'])
         # os.chdir('workspace/{}'.format(was_rep1))
@@ -770,18 +770,18 @@ def build(robot_path, service=None, network_info=None):
         curl_cmd = ["curl", "-X", "POST", "-u", "admin:admin", url]
         print(f"build: {pkg} @ {ip}")
         subprocess.run(curl_cmd, check=False)
+        
 
-
-######### Start name server #####################
+######### Start name server ##################### 
 # rtm nameserverの起動確認と起動
 def nameserver():
     ##ROS1用
     # # ps aux | grep rosmaster | grep -v grep の出力行数を取得
     # result = subprocess.run(["ps", "aux"], capture_output=True, text=True)
-
+    
     # # psコマンドの結果をフィルタリングして "rosmaster" を含む行を検索
     # matching_lines = [line for line in result.stdout.splitlines() if "rosmaster" in line and "grep" not in line]
-
+    
     # # "rosmaster" に関連する行があれば、それが起動しているということ
     # if not len(matching_lines) > 0:
     #     print("roscoreが起動していません。roscoreを起動します...")
@@ -794,7 +794,7 @@ def nameserver():
     #     print("roscoreはすでに起動しています．")
 
     result = subprocess.run(["ps", "aux"], capture_output=True, text=True)
-
+    
     # psコマンドの結果をフィルタリングして "omni" を含む行を検索
     matching_lines = [line for line in result.stdout.splitlines() if "omni" in line and "grep" not in line]
     print(len(matching_lines))
@@ -849,10 +849,10 @@ def run_service_application(ros_version):
     print("サービスアプリケーションを実行")
 
     if ros_version == 1:
-        command = "rosrun rois_env_ros1 service_app_ros1.py"
+        command = "rosrun rois_env service_app_ros1.py"
 
     elif ros_version == 2:
-        command = "ros2 run rois_env_ros2 service_app_ros2.py"
+        command = "ros2 run rois_env service_app_ros2.py"
 
     else:
         raise ValueError(
@@ -864,14 +864,35 @@ def run_service_application(ros_version):
         "--wait",
         "--",
         "bash",
-        "-i",
-        "-c",
-        f"{command}; echo; echo 'service_app finished.'; exec bash"
+        "-ic",
+        command
     ])
+
+    # デバック用
+    # P = subprocess.Popen([
+    #     "gnome-terminal",
+    #     "--wait",
+    #     "--",
+    #     "bash",
+    #     "-ic",
+    #     f"{command}; echo; echo 'service_app finished.'; exec bash"
+    # ])
 
     print("動作選択")
     return_code = P.wait()
     print("動作完了")
+
+    # ノード消去（仮）
+    subprocess.run(
+        ["pkill", "-TERM", "-f", "/hsr_hri_action/"],
+        check=False
+    )
+
+    # 共通HRI・Engineを停止
+    subprocess.run(
+        ["pkill", "-TERM", "-f", "/common_hri_ros2/"],
+        check=False
+    )
 
     return return_code
 
@@ -888,7 +909,7 @@ def run(yml_path = None):
     else:
         with open(yml_path , 'r') as yml:
             config = yaml.safe_load(yml)
-
+    
     print(config)
 
     # system コマンドの実行
@@ -907,7 +928,7 @@ def run(yml_path = None):
                         print(f"Error getting directory for package {package_name}: {stderr}")
                         continue
                     package_dir = stdout.strip()
-
+                    
                     # コマンド実行
                     exec_cmd = (
                         f"cd {package_dir} && ./mgr.py system run {command_name}"
@@ -956,7 +977,7 @@ def run(yml_path = None):
             print("No module commands to execute.")
     else:
         print("No 'module' section in run configuration.")
-
+    
 import yaml
 import subprocess
 
@@ -1237,7 +1258,7 @@ def _perform_setup_checks(checks_cfg: Dict[str, str], middleware_type: Optional[
     for attempt in range(2):
         print(f"Running check attempt {attempt + 1}: {' '.join(cmd_parts)}")
         cmd_line = f"source ~/.bashrc; {' '.join(cmd_parts)}"
-        result = subprocess.run([BASH, "-ic", cmd_line], capture_output=True, text=True)
+        result = subprocess.run([BASH, "-c", cmd_line], capture_output=True, text=True)
         output = (result.stdout or '').strip().lower()
         if output == 'true':
             print("Check passed.")
@@ -1288,7 +1309,7 @@ def process_setup(yml_path: str) -> bool:
 # ○YAMLからシナリオを読み込みサービス名とタスクを抽出する
 # シナリオから機能名リストを抽出
 def scenario_analyze(scenario_path):
-
+   
     os.chdir(system_dir)
 
     scenario_data = load_yaml(scenario_path)
@@ -1325,13 +1346,13 @@ def stop_all_processes():
 # 指定IP上のRTCを検索してDeactivate
 def deactivate_remote_rtcs(target_ip):
     print(f"--- Searching for RTCs on {target_ip} ---")
-
+    
     #rtfind コマンドを実行してリストを取得
     try:
         result = subprocess.run(
-            ["rtfind", f"{target_ip}/"],
-            capture_output=True,
-            text=True,
+            ["rtfind", f"{target_ip}/"], 
+            capture_output=True, 
+            text=True, 
             check=True
         )
     except subprocess.CalledProcessError as e:
@@ -1344,10 +1365,10 @@ def deactivate_remote_rtcs(target_ip):
     count = 0
     for path in found_paths:
         path = path.strip()
-
+        
         if path.endswith(".rtc"):
             print(f"Deactivating: {path}")
-
+            
             try:
                 subprocess.run(["rtdeact", path], check=False)
                 count += 1
@@ -1358,7 +1379,7 @@ def deactivate_remote_rtcs(target_ip):
         print("No active RTCs found to deactivate.")
     else:
         print(f"--- Finished. Deactivation attempted for {count} components. ---")
-
+    
 # robot YAMLからネットワーク情報を構造化
 def get_network_info(master_ip, robot_path):
     config_data = load_yaml(robot_path)
@@ -1395,7 +1416,7 @@ def set_network(network_info, robot_path, ros_version, domain_id=None):
     if ros_version == 1:
         # master_ipのbash確認
         ip_state=check_master(network_info)
-
+        
         #設定済みだったら、
         if ip_state==True:
             print("state true")
@@ -1412,16 +1433,16 @@ def set_network(network_info, robot_path, ros_version, domain_id=None):
     elif ros_version == 2:
         set_server(network_info, robot_path, ros_version, domain_id)
         ros2_state = check_ros2(network_info, domain_id)
-
+            
         if ros2_state:
             print("state true")
             print("ROS2 setting is already configured.")
         else:
             print("state false")
             set_ros2(network_info, domain_id)
-
+        
         return set_server(network_info, robot_path, ros_version, domain_id)
-
+    
 # master設定の有効性をリモートチェック
 def check_master(network_info):
     print("check master")
@@ -2225,12 +2246,12 @@ def main(robot_path, service, functions):
         # サーバー起動
         server_start(network_info, ros_version)
         if len(args)<5:
-            nameserver()
+            nameserver() 
 
         ## ロボットセットアップモジュール起動
         if not process_setup(robot_path):
             return
-
+        
         ## 他モジュール起動
         run_web(robot_path)
         print(f"HRI package {service}")
@@ -2243,10 +2264,10 @@ def main(robot_path, service, functions):
         #     print("シナリオ動作中....")
         #     return_code = P.wait() # service_app.py の終了を待機
         #     print(f"シナリオ動作完了")
-
+        
         time.sleep(4)
         run_service_application(ros_version)
-
+    
     elif args[3] == 'setrun':
         print("system set & run")
         ## 通信設定
@@ -2255,12 +2276,12 @@ def main(robot_path, service, functions):
         ## サーバー起動
         server_start(network_info, ros_version)
         if len(args)<5:
-            nameserver()
+            nameserver() 
 
         ## ロボットセットアップモジュール起動
         if not process_setup(robot_path):
             return
-
+        
         ## 他モジュール起動
         run_web(robot_path)
         print(f"HRI package {service}")
@@ -2282,7 +2303,7 @@ def main(robot_path, service, functions):
             stop_all_processes()
         else:
             print("allか否かがわかりません")
-
+    
     elif args[3] == 'nameserver':
         print("sytem run")
         nameserver()
@@ -2293,7 +2314,7 @@ def main(robot_path, service, functions):
 # ○
 if __name__ == '__main__':
     # print("start")
-    rtsi_dir = "RTSI_FW"
+    rtsi_dir = "RTSI_FWasanbonWeb_master"
 
     args = sys.argv
 
