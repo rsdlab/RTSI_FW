@@ -25,17 +25,19 @@
 - [Wasanbon Web Framework](https://github.com/rsdlab/wasanbon_webframework/tree/main)
 
 ## 他に必要なパッケージ
-| ファイル・ディレクトリ | 役割 |
+| ファイル・ディレクトリ | 役割等 |
 | --- | --- |
-|[rois_env](https://github.com/rsdlab/rois_env)|Service Applicationを有するパッケージ|
-|[common_hri_ros1](https://github.com/rsdlab/common_hri/tree/main/common_hri_ros1)|ROS1で動作させる場合に使用する，HRI機能を有するパッケージ|
-|[common_hri_ros2](https://github.com/rsdlab/common_hri/tree/main/common_hri_ros2)|ROS2で動作させる場合に使用する，HRI機能を有するパッケージ|
+|[rois_env](https://github.com/rsdlab/rois_env/tree/ros1-ros2)|Service Applicationを有するパッケージ，開発PCに配置する|
+|[common_hri](https://github.com/rsdlab/common_hri/tree/main)|HRI機能を有するパッケージ，開発PCに配置する|
+|<ROBOT>_hri_action|ロボットの動作実行ノード，使用するロボットに合わせて作成し，ロボットを制御するPCに直接配置する|
+
+rois_env，common_hriに関しては，開発環境に合わせて～_ros1，～_ros2を選択して片方のみをダウンロード・使用する（ROS2の場合，rois_env_ros2とcommon_hri_ros2を使用）
 
 ## リポジトリ内のファイル
 | ファイル・ディレクトリ | 役割 |
 | --- | --- |
 | `Systemoperate.py` | 収集・ビルド・通信設定・起動を行うCLI |
-| `ROBOT.yaml` | ロボットごとのソフトウェア・起動・通信設定 |
+| `＜ROBOT＞.yaml` | ロボットごとのソフトウェア・起動・通信設定 |
 | `scenario.yaml` | 実行するタスクとその引数を記述するファイル |
 | `process_waweb/` | Wasanbon Webの起動・停止等に関する補助スクリプト |
 | `setup/` | 初期化処理の完了確認に使用するユーティリティ |
