@@ -29,7 +29,7 @@
 | --- | --- |
 |[rois_env](https://github.com/rsdlab/rois_env/tree/ros1-ros2)|Service Applicationを有するパッケージ，開発PCに配置する|
 |[common_hri](https://github.com/rsdlab/common_hri/tree/main)|HRI機能を有するパッケージ，開発PCに配置する|
-|<ROBOT>_hri_action|ロボットの動作実行ノード，使用するロボットに合わせて作成し，ロボットを制御するPCに直接配置する|
+|＜ROBOT＞_hri_action|ロボットの動作実行ノード，使用するロボットに合わせて作成し，ロボットを制御するPCに直接配置する|
 
 rois_env，common_hriに関しては，開発環境に合わせて～_ros1，～_ros2を選択して片方のみをダウンロード・使用する（ROS2の場合，rois_env_ros2とcommon_hri_ros2を使用）
 
