@@ -26,15 +26,31 @@ Systemoperate.py
 
 ## 3. 事前準備
 使用するPCにはROS,RTMなどの必要なミドルウェア，[Wasanbon](https://github.com/rsdlab/wasanbon)，[Wasanbon_webframework](https://github.com/rsdlab/wasanbon_webframework)を導入してあるものとする．
+Wasanbon，Wasanbon_webframeworkの導入に関しては各リポジトリのREADME参照．
 
 ### 3.1 リポジトリの取得
-必要パッケージを取得する．
+メインパッケージを取得する．
 ```bash
 cd ~
 git clone https://github.com/rsdlab/RTSI_FW.git
 cd RTSI_FW
 ```
 ＊現在の実装では，ロボット設定ファイルとシナリオファイルの参照先を $HOME/RTSI_FW/ としているため，リポジトリはホームディレクトリ直下に配置する．
+
+FW内で利用するパッケージを取得・ビルドする．（以下ROS2の場合．ROS1の場合は適宜書き換えてください）
+```bash
+cd ~/colcon_ws/src
+
+git clone -b ros1-ros2 --single-branch --sparse https://github.com/rsdlab/rois_env.git
+git -C rois_env sparse-checkout set rois_env_ros2
+
+git clone -b main --single-branch --sparse https://github.com/rsdlab/common_hri.git
+git -C common_hri sparse-checkout set common_hri_ros2
+
+cd ~/colcon_ws
+colcon build --symlink-install --packages-select rois_env_ros2 common_hri_ros2
+source install/setup.bash
+```
 
 ### 3.2 環境変数の設定
 `Systemoperate.py`の起動時には`ROS_WS`と`RTM_WS`を参照します。対象環境に合わせて両方を定義します。
@@ -44,12 +60,12 @@ cd RTSI_FW
 export ROS_WS="$HOME/colcon_ws"
 export RTM_WS="$HOME/rtm_ws"
 source /opt/ros/humble/setup.bash
-# ビルド済みの場合：source "$ROS_WS/install/setup.bash"
 ```
 
-## 4. ロボット設定ファイルの記述
-ロボット固有の設定を記載する．
+## 4. ロボット設定ファイルの記述（.yaml）
+ロボット固有の設定を記載する．（例 ROS2：HSR.yaml，ROS1：AIREC.yaml）
 Systemoperate.py実行時参照するファイルとして利用させるものである．
+ファイル名は＜ROBOT名＞.yamlとする．
 
 | 項目 | 説明 |
 | --- | --- |
@@ -123,11 +139,28 @@ ros2:
 シナリオファイルには，実行するタスクとそのパラメータを記載する．
 現行のService Applicationではscenario.yamlというファイル名を前提としている．
 
+```yaml
+scenario:
+  - task: Move
+    act: テーブルに移動する
+    arg: [[1.0, 0.0, 0.0], [0.0, 0.0]]
+  - task: Approach
+    act: 水に手を伸ばす
+    arg: 水
+```
+
+| 項目 | 説明 |
+| --- | --- |
+| `task` | コンポーネント名 |
+| `act` | 動作の説明．任意の文 |
+| `arg` | 引数 |
+
+
 ## 6. 実行方法
 ### 6.1 コマンド形式
 
 ```bash
-python3 Systemoperate.py <ロボット名> <シナリオ名> <操作> <マスターIP>
+python3 Systemoperate.py <ロボット名> <シナリオ名> <実行引数> <マスターIP>
 
 #例
 python3 Systemoperate.py HSR scenario run 192.168.50.111
@@ -148,14 +181,16 @@ python3 Systemoperate.py HSR scenario run 192.168.50.111
 `run`/`setrun`を実行した場合，以下の処理となる．
 
 1. ロボット設定・シナリオの読込とROSバージョン判別
-2. `common_hri_ros1`/`common_hri_ros2`のロボット別`robot.yaml`、`hri.xml`を配置
-3. 必要に応じて通信設定（`setrun`）
-4. Wasanbon Webサーバなどの起動確認とセットアップ実行
+2. `common_hri_ros1`/`common_hri_ros2`のロボット別`robot.yaml`、`hri.xml`をコピーして配置
+3. 通信設定（`setrun`のみ）
+4. Wasanbon Webサーバ<sup>※</sup>などの起動確認とセットアップ実行
 5. ロボット固有の`run`設定に従ってWeb APIでモジュールを起動
 6. シナリオに必要なHRI機能の起動設定を生成して実行
 7. Service Applicationを起動
 
-Wasanbon Webへの要求先は，現行コードでは`http://<host>:8000/`を用いる．
+※Wasanbon Webへの要求先は，現行コードでは`http://<host>:8000/`を用いる．
+
+rois_envに含まれるservice_appでは，新規ターミナルが開いた後Aを入力することでシナリオが開始される．
 
 ## 7. 参考
 
